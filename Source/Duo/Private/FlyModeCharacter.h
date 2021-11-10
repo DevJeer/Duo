@@ -35,6 +35,8 @@ public:
 	void MoveForward(float axisValue);
 	void MoveRight(float axisValue);
 	void MoveUp(float axisValue);
+	void MoveRightByMouse(float axisValue);
+	void MoveUpByMouse(float axisValue);
 
 	/******************POVFunctions***********************/
 	virtual void AddControllerPitchInput(float axisValue) override;
@@ -100,6 +102,9 @@ public:
 	bool m_bIsRotatingView;
 	UPROPERTY(EditAnywhere)
 	float m_lookSpeed = 0.5f;
+
+	// Pan Properties
+	bool m_bIsPanning;
 
 	/*********************MouseHitProperties*************/
 	FHitResult m_hitResult;

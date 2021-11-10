@@ -125,6 +125,8 @@ void AFlyModeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAxis("MoveForward", this, &AFlyModeCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AFlyModeCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("MoveUp", this, &AFlyModeCharacter::MoveUp);
+	PlayerInputComponent->BindAxis("MouseX", this, &AFlyModeCharacter::MoveRightByMouse);
+	PlayerInputComponent->BindAxis("MouseY", this, &AFlyModeCharacter::MoveUpByMouse);
 	PlayerInputComponent->BindAxis("Turn", this, &AFlyModeCharacter::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("LookUp", this, &AFlyModeCharacter::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("MouseWheelScroll", this, &AFlyModeCharacter::GetMouseWheelInput);
@@ -162,6 +164,24 @@ void AFlyModeCharacter::MoveRight(float axisValue)
 void AFlyModeCharacter::MoveUp(float axisValue)
 {
 	if (Controller)
+	{
+		m_upDir = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Z);
+		AddMovementInput(m_upDir, axisValue);
+	}
+}
+
+void AFlyModeCharacter::MoveRightByMouse(float axisValue)
+{
+	if (Controller && m_bIsPanning)
+	{
+		m_rightDir = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
+		AddMovementInput(m_rightDir, axisValue);
+	}
+}
+
+void AFlyModeCharacter::MoveUpByMouse(float axisValue)
+{
+	if (Controller && m_bIsPanning)
 	{
 		m_upDir = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Z);
 		AddMovementInput(m_upDir, axisValue);
@@ -226,15 +246,18 @@ void AFlyModeCharacter::OnRightMouseButtonReleased()
 
 void AFlyModeCharacter::OnLeftMouseButtonPressed()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Left Mouse Pressed."));
 	// Render outline of selected object.
 	// Todo.
 
+	// Enable panning.
+	m_bIsPanning = true;
+	UE_LOG(LogTemp, Warning, TEXT("Panning Enable."));
 }
 
 void AFlyModeCharacter::OnLeftMouseButtonReleased()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Left Mouse Released."));
+	m_bIsPanning = false;
+	UE_LOG(LogTemp, Warning, TEXT("Panning Disable."));
 }
 
 void AFlyModeCharacter::OnLeftMouseButtonDoubleClick()
