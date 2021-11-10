@@ -69,6 +69,7 @@ private:
 	UFUNCTION()
 		void HandleTimelineFinishedTrack();
 
+	void HandleMouseWheelStatusChanged();
 
 	// Get mouse wheel input value.
 	void GetMouseWheelInput(float axisValue);

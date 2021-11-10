@@ -10,25 +10,32 @@
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/UserWidget.h"
 
-// Save lerp value.
-static float s_lerpValue;
-
 // Save hit result.
 static FHitResult s_hitResult;
 
+// Save lerp value.
+static float s_lerpValue;
 // Save current location of camera and actor.
 static FVector s_originalCamRelativeLocation;
 static FVector s_targetCamRelativeLocation;
 static FVector s_originalActorLocation;
 static FVector s_targetActorLocation;
 
-static float s_smoothedDolly = .0f;
+const float DEFAULT_ZOOM_SPEED = 10.0f;
+const float MAX_ZOOM_SPEED = DEFAULT_ZOOM_SPEED * 10.0f;
+const float MIN_ZOOM_SPEED = DEFAULT_ZOOM_SPEED / 10.0f;
+// Control zoom speed.
+const float ZOOM_FACTOR = 35.0f;
+// Save scroll wheel input.
+static float s_scrollWheelInputValue;
+static float s_smoothedDolly;
+// Save zoom direction.
 static FVector s_zoomDir;
 
 // Sets default values
 AFlyModeCharacter::AFlyModeCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	// Get root component.
@@ -69,7 +76,7 @@ AFlyModeCharacter::AFlyModeCharacter()
 void AFlyModeCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	// Setup playerController.
 	m_playerController = UGameplayStatics::GetPlayerController(this, 0);
 	if (m_playerController)
@@ -183,7 +190,7 @@ void AFlyModeCharacter::AddControllerYawInput(float axisValue)
 void AFlyModeCharacter::GetMouseWheelInput(float axisValue)
 {
 	// Get MouseWheel Input.
-	scrollWheelInputValue = axisValue;
+	s_scrollWheelInputValue = axisValue;
 
 	//UE_LOG(LogTemp, Warning, TEXT("Scroll Wheel input value is %f"), axisValue);
 }
@@ -257,23 +264,7 @@ void AFlyModeCharacter::OnLeftMouseButtonDoubleClick()
 
 void AFlyModeCharacter::OnMouseWheelUpPressed()
 {
-	// Detect Actor.
-	s_hitResult = GetHitResult();
-	if (s_hitResult.GetActor())
-	{
-		// Calculate zoom speed.
-		CalculateZoomSpeed();
-		s_zoomDir = s_hitResult.Location - this->GetActorLocation();
-		// .0001f is the minimum of zoomAnchorDir.
-		s_zoomDir.Normalize(.0001f);
-		// Calculate forward dir.
-		//m_forwardDir = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
-	}
-	else
-	{
-		// Reset zoom speed.
-		m_zoomSpeed = 10.f;
-	}
+	HandleMouseWheelStatusChanged();
 }
 
 void AFlyModeCharacter::OnMouseWheelUpReleased()
@@ -283,20 +274,7 @@ void AFlyModeCharacter::OnMouseWheelUpReleased()
 
 void AFlyModeCharacter::OnMouseWheelDownPressed()
 {
-	// Detect Actor.
-	s_hitResult = GetHitResult();
-	if (s_hitResult.GetActor())
-	{
-		// Calculate zoom speed.
-		CalculateZoomSpeed();
-		// Calculate forward dir.
-		m_forwardDir = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
-	}
-	else
-	{
-		// Reset zoom speed.
-		m_zoomSpeed = 10.f;
-	}
+	HandleMouseWheelStatusChanged();
 }
 
 void AFlyModeCharacter::OnMouseWheelDownReleased()
@@ -389,35 +367,52 @@ void AFlyModeCharacter::HandleTimelineFinishedTrack()
 	UE_LOG(LogTemp, Warning, TEXT("Timeline is finished!"));
 }
 
+void AFlyModeCharacter::HandleMouseWheelStatusChanged()
+{
+	// Detect Actor.
+	s_hitResult = GetHitResult();
+	if (s_hitResult.GetActor())
+	{
+		// Calculate zoom speed.
+		//UE_LOG(LogTemp, Warning, TEXT("Distance : %f"), s_hitResult.Distance);
+		m_zoomSpeed = s_hitResult.Distance / ZOOM_FACTOR;
+		// Limit the maximum and minimum value.
+		m_zoomSpeed = FMath::Clamp(m_zoomSpeed, MIN_ZOOM_SPEED, MAX_ZOOM_SPEED);
+		//UE_LOG(LogTemp, Warning, TEXT("ZoomSpeed : %f"), m_zoomSpeed);
+		s_zoomDir = s_hitResult.Location - this->GetActorLocation();
+		// .0001f is the minimum of zoomAnchorDir.
+		s_zoomDir.Normalize(.0001f);
+	}
+	else
+	{
+		// Reset zoom speed.
+		m_zoomSpeed = DEFAULT_ZOOM_SPEED;
+	}
+}
+
 void AFlyModeCharacter::CalculateZoomSpeed()
 {
-	// Log Distance.dolly
-	UE_LOG(LogTemp, Warning, TEXT("Distance : %f"), s_hitResult.Distance);
-	m_zoomSpeed = s_hitResult.Distance / 35.0f;
-	// Limit the maximum and minimum value.
-	m_zoomSpeed = FMath::Clamp(m_zoomSpeed, .0f, 100.0f);
-	UE_LOG(LogTemp, Warning, TEXT("ZoomSpeed : %f"), m_zoomSpeed);
+
 }
 
 void AFlyModeCharacter::Zoom(float deltaTime)
 {
-	// Calculate smoothed dolly
-	s_smoothedDolly = FMath::FInterpTo(s_smoothedDolly, scrollWheelInputValue, deltaTime, 10.f);
-	
+	// Calculate smoothed dolly. 
+	// 10.f controls the rate of change of the interpolation.
+	s_smoothedDolly = FMath::FInterpTo(s_smoothedDolly, s_scrollWheelInputValue, deltaTime, 10.f);
+
 	// Calculate zoom speed by distance.
-	// Can don't create deltaLocation Todo.
 	//FVector deltaLocation = m_forwardDir * s_smoothedDolly  * m_zoomSpeed;
 	FVector deltaLocation = s_zoomDir * s_smoothedDolly * m_zoomSpeed;
-	if (deltaLocation.X != .0f)
-	{
-		//UE_LOG(LogTemp, Warning, TEXT("scrolWheelInputValue %f"), scrollWheelInputValue);
-		UE_LOG(LogTemp, Warning, TEXT("smoothDolly %f"), s_smoothedDolly);
-		//UE_LOG(LogTemp, Warning, TEXT("--------------------------"));
-		//UE_LOG(LogTemp, Warning, TEXT("forwardDir %f, %f, %f"), m_forwardDir.X, m_forwardDir.Y, m_forwardDir.Z);
-		//UE_LOG(LogTemp, Warning, TEXT("deltaLocation %f, %f, %f"), deltaLocation.X, deltaLocation.Y, deltaLocation.Z);
-		//UE_LOG(LogTemp, Warning, TEXT("-----------------------"));
-	}
-		
+	//if (deltaLocation.X != .0f)
+	//{
+	//	UE_LOG(LogTemp, Warning, TEXT("scrolWheelInputValue %f"), scrollWheelInputValue);
+	//	UE_LOG(LogTemp, Warning, TEXT("smoothDolly %f"), s_smoothedDolly);
+	//	UE_LOG(LogTemp, Warning, TEXT("--------------------------"));
+	//	UE_LOG(LogTemp, Warning, TEXT("forwardDir %f, %f, %f"), m_forwardDir.X, m_forwardDir.Y, m_forwardDir.Z);
+	//	UE_LOG(LogTemp, Warning, TEXT("deltaLocation %f, %f, %f"), deltaLocation.X, deltaLocation.Y, deltaLocation.Z);
+	//	UE_LOG(LogTemp, Warning, TEXT("-----------------------"));
+	//}
 	this->AddActorWorldOffset(deltaLocation);
 }
 

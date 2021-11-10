@@ -16,9 +16,9 @@ void APlayerHUD::DrawHUD()
 	if (flyModeCharacter)
 	{
 		AddText(TEXT("FlyMode"), FText::FromString(FString(TEXT(""))));
-		AddVector(TEXT("Forward dir"), flyModeCharacter->m_forwardDir);
-		AddVector(TEXT("Right dir"), flyModeCharacter->m_rightDir);
-		AddVector(TEXT("Up dir"), flyModeCharacter->m_upDir);
+		//AddVector(TEXT("Forward dir"), flyModeCharacter->m_forwardDir);
+		//AddVector(TEXT("Right dir"), flyModeCharacter->m_rightDir);
+		//AddVector(TEXT("Up dir"), flyModeCharacter->m_upDir);
 		//AddFloat(TEXT("ScrollWheel"), flyModeCharacter->scrollWheelInputValue);
 		//AddVector(TEXT("Anchor point dir"), flyModeCharacter->zoomAnchorDir);
 	}
