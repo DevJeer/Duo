@@ -37,6 +37,7 @@ public:
 	void MoveUp(float axisValue);
 	void MoveRightByMouse(float axisValue);
 	void MoveUpByMouse(float axisValue);
+	void MoveImp(float axisValue, EAxis::Type axis);
 
 	/******************POVFunctions***********************/
 	virtual void AddControllerPitchInput(float axisValue) override;

@@ -125,8 +125,8 @@ void AFlyModeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAxis("MoveForward", this, &AFlyModeCharacter::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AFlyModeCharacter::MoveRight);
 	PlayerInputComponent->BindAxis("MoveUp", this, &AFlyModeCharacter::MoveUp);
-	PlayerInputComponent->BindAxis("MouseX", this, &AFlyModeCharacter::MoveRightByMouse);
-	PlayerInputComponent->BindAxis("MouseY", this, &AFlyModeCharacter::MoveUpByMouse);
+	PlayerInputComponent->BindAxis("MoveRightByMouse", this, &AFlyModeCharacter::MoveRightByMouse);
+	PlayerInputComponent->BindAxis("MoveUpByMouse", this, &AFlyModeCharacter::MoveUpByMouse);
 	PlayerInputComponent->BindAxis("Turn", this, &AFlyModeCharacter::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("LookUp", this, &AFlyModeCharacter::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("MouseWheelScroll", this, &AFlyModeCharacter::GetMouseWheelInput);
@@ -147,8 +147,7 @@ void AFlyModeCharacter::MoveForward(float axisValue)
 {
 	if (Controller)
 	{
-		m_forwardDir = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::X);
-		AddMovementInput(m_forwardDir, axisValue);
+		MoveImp(axisValue, EAxis::X);
 	}
 }
 
@@ -156,8 +155,7 @@ void AFlyModeCharacter::MoveRight(float axisValue)
 {
 	if (Controller)
 	{
-		m_rightDir = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
-		AddMovementInput(m_rightDir, axisValue);
+		MoveImp(axisValue, EAxis::Y);
 	}
 }
 
@@ -165,8 +163,7 @@ void AFlyModeCharacter::MoveUp(float axisValue)
 {
 	if (Controller)
 	{
-		m_upDir = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Z);
-		AddMovementInput(m_upDir, axisValue);
+		MoveImp(axisValue, EAxis::Z);
 	}
 }
 
@@ -174,8 +171,7 @@ void AFlyModeCharacter::MoveRightByMouse(float axisValue)
 {
 	if (Controller && m_bIsPanning)
 	{
-		m_rightDir = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Y);
-		AddMovementInput(m_rightDir, axisValue);
+		MoveImp(axisValue, EAxis::Y);
 	}
 }
 
@@ -183,9 +179,13 @@ void AFlyModeCharacter::MoveUpByMouse(float axisValue)
 {
 	if (Controller && m_bIsPanning)
 	{
-		m_upDir = FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(EAxis::Z);
-		AddMovementInput(m_upDir, axisValue);
+		MoveImp(axisValue, EAxis::Z);
 	}
+}
+
+void AFlyModeCharacter::MoveImp(float axisValue, EAxis::Type axis)
+{
+	AddMovementInput(FRotationMatrix(Controller->GetControlRotation()).GetScaledAxis(axis), axisValue);
 }
 
 void AFlyModeCharacter::AddControllerPitchInput(float axisValue)
