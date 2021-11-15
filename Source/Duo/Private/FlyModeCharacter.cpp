@@ -256,7 +256,29 @@ void AFlyModeCharacter::OnLeftMouseButtonPressed()
 
 void AFlyModeCharacter::OnLeftMouseButtonReleased()
 {
+	static UPrimitiveComponent* s_lastComp = nullptr;
 	m_bIsPanning = false;
+
+	// Clear last selection.
+	if (s_lastComp)
+	{
+		s_lastComp->SetRenderCustomDepth(false);
+	}
+
+	// Highlight selection.
+	s_hitResult = GetHitResult();
+	if (s_hitResult.GetComponent())
+	{
+		// Highlight actor
+		s_hitResult.Component->SetRenderCustomDepth(true);
+		s_lastComp = s_hitResult.GetComponent();
+	}
+	else
+	{
+		s_lastComp = nullptr;
+	}
+	
+	
 	UE_LOG(LogTemp, Warning, TEXT("Panning Disable."));
 }
 
