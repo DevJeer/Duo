@@ -10,6 +10,10 @@
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/UserWidget.h"
 
+
+// Save last actor location.
+static FVector s_lastActorLocation = FVector(.0f, .0f, .0f);
+
 // Save hit result.
 static FHitResult s_hitResult;
 
@@ -244,20 +248,27 @@ void AFlyModeCharacter::OnRightMouseButtonReleased()
 	RevertPOV();
 }
 
+
 void AFlyModeCharacter::OnLeftMouseButtonPressed()
 {
-	// Render outline of selected object.
-	// Todo.
-
 	// Enable panning.
 	m_bIsPanning = true;
-	UE_LOG(LogTemp, Warning, TEXT("Panning Enable."));
+	//m_playerController->GetMousePosition(mousePos.X, mousePos.Y);
+	s_lastActorLocation = GetActorLocation();
 }
 
 void AFlyModeCharacter::OnLeftMouseButtonReleased()
 {
 	static UPrimitiveComponent* s_lastComp = nullptr;
 	m_bIsPanning = false;
+
+	FVector currLoc;
+	currLoc = GetActorLocation();
+	// 1.f is tolerance.
+	if (!currLoc.Equals(s_lastActorLocation, 1.f))
+	{
+		return;
+	}
 
 	// Clear last selection.
 	if (s_lastComp)
@@ -277,9 +288,6 @@ void AFlyModeCharacter::OnLeftMouseButtonReleased()
 	{
 		s_lastComp = nullptr;
 	}
-	
-	
-	UE_LOG(LogTemp, Warning, TEXT("Panning Disable."));
 }
 
 void AFlyModeCharacter::OnLeftMouseButtonDoubleClick()
@@ -326,8 +334,6 @@ void AFlyModeCharacter::OnMouseWheelDownReleased()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Mouse Wheel Down Released!"));
 }
-
-
 
 void AFlyModeCharacter::SetPOV()
 {
