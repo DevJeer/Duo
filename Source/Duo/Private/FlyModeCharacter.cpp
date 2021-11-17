@@ -441,11 +441,6 @@ void AFlyModeCharacter::HandleMouseWheelStatusChanged()
 	}
 }
 
-void AFlyModeCharacter::CalculateZoomSpeed()
-{
-
-}
-
 void AFlyModeCharacter::Zoom(float deltaTime)
 {
 	// Calculate smoothed dolly. 
