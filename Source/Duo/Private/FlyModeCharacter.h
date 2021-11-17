@@ -77,9 +77,6 @@ private:
 	// Get mouse wheel input value.
 	void GetMouseWheelInput(float axisValue);
 
-	// Calculate zoom speed.
-	void CalculateZoomSpeed();
-
 	void Zoom(float deltaTime);
 
 
@@ -120,5 +117,4 @@ public:
 	float scrollWheelInputValue;
 	UPROPERTY(EditAnywhere)
 	float m_zoomSpeed = 10.f;
-
 };
