@@ -26,8 +26,6 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	class UCharacterMovementComponent* m_characterMovementComp;
-
 	APlayerController* m_playerController;
 
 
@@ -79,6 +77,8 @@ private:
 
 	void Zoom(float deltaTime);
 
+	UFUNCTION(Exec)
+	void SetSensitivity(float sensitivity);
 
 protected:
 	// Camera
@@ -99,7 +99,7 @@ public:
 	/************************RotateProperies**********************/
 	bool m_bIsRotatingView;
 	UPROPERTY(EditAnywhere)
-	float m_lookSpeed = 0.5f;
+	float m_sensitivityFactor = 1.0f;
 
 	// Pan Properties
 	bool m_bIsPanning;

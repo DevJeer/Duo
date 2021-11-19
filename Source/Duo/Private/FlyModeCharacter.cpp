@@ -36,6 +36,11 @@ static float s_smoothedDolly;
 // Save zoom direction.
 static FVector s_zoomDir;
 
+// Sensibility
+const float DEFAULT_MAX_ACCELERATEION = 4096.0f;
+const float DEFAULT_MAX_FLYSPEED = 1200.0f;
+const float DEFAULT_SENSITIVITY = 1.0f;
+
 // Sets default values
 AFlyModeCharacter::AFlyModeCharacter()
 {
@@ -55,13 +60,13 @@ AFlyModeCharacter::AFlyModeCharacter()
 	m_cameraComp->bUsePawnControlRotation = true;
 
 	// Setup character movement component.
-	m_characterMovementComp = GetCharacterMovement();
-	m_characterMovementComp->GravityScale = 0.0f;
-	m_characterMovementComp->MaxAcceleration = 4096.0f;
-	m_characterMovementComp->BrakingFrictionFactor = 40.0f;
-	m_characterMovementComp->Mass = 0.0f;
-	m_characterMovementComp->DefaultLandMovementMode = EMovementMode::MOVE_Flying;
-	m_characterMovementComp->MaxFlySpeed = 1200.0f;
+	UCharacterMovementComponent* cmc = GetCharacterMovement();
+	cmc->GravityScale = 0.0f;
+	cmc->MaxAcceleration = 4096.0f;
+	cmc->BrakingFrictionFactor = 40.0f;
+	cmc->Mass = 0.0f;
+	cmc->DefaultLandMovementMode = EMovementMode::MOVE_Flying;
+	cmc->MaxFlySpeed = 1200.0f;
 
 	// Setup character properties
 	bUseControllerRotationPitch = true;
@@ -197,7 +202,7 @@ void AFlyModeCharacter::AddControllerPitchInput(float axisValue)
 	if (axisValue != .0f && Controller->IsLocalPlayerController() && m_bIsRotatingView)
 	{
 		APlayerController* const pc = CastChecked<APlayerController>(Controller);
-		pc->AddPitchInput(axisValue * m_lookSpeed);
+		pc->AddPitchInput(axisValue * m_sensitivityFactor);
 	}
 }
 
@@ -206,7 +211,7 @@ void AFlyModeCharacter::AddControllerYawInput(float axisValue)
 	if (axisValue != .0f && Controller->IsLocalPlayerController() && m_bIsRotatingView)
 	{
 		APlayerController* const pc = CastChecked<APlayerController>(Controller);
-		pc->AddYawInput(axisValue * m_lookSpeed);
+		pc->AddYawInput(axisValue * m_sensitivityFactor);
 	}
 }
 
@@ -426,7 +431,7 @@ void AFlyModeCharacter::HandleMouseWheelStatusChanged()
 	{
 		// Calculate zoom speed.
 		//UE_LOG(LogTemp, Warning, TEXT("Distance : %f"), s_hitResult.Distance);
-		m_zoomSpeed = s_hitResult.Distance / ZOOM_FACTOR;
+		m_zoomSpeed = s_hitResult.Distance / ZOOM_FACTOR * m_sensitivityFactor;
 		// Limit the maximum and minimum value.
 		m_zoomSpeed = FMath::Clamp(m_zoomSpeed, MIN_ZOOM_SPEED, MAX_ZOOM_SPEED);
 		//UE_LOG(LogTemp, Warning, TEXT("ZoomSpeed : %f"), m_zoomSpeed);
@@ -460,5 +465,17 @@ void AFlyModeCharacter::Zoom(float deltaTime)
 	//	UE_LOG(LogTemp, Warning, TEXT("-----------------------"));
 	//}
 	this->AddActorWorldOffset(deltaLocation);
+}
+
+void AFlyModeCharacter::SetSensitivity(float sensitivity)
+{
+	if (sensitivity <= .0f)
+		return;
+	UCharacterMovementComponent* cmc = GetCharacterMovement();
+	// Update keyboard move speed.
+	cmc->MaxAcceleration = DEFAULT_MAX_ACCELERATEION * sensitivity;
+	cmc->MaxFlySpeed = DEFAULT_MAX_FLYSPEED * sensitivity;
+	// Update rotate speed.
+	m_sensitivityFactor = DEFAULT_SENSITIVITY * sensitivity;
 }
 
