@@ -112,9 +112,6 @@ void ASplineActor::OnConstruction(const FTransform& Transform)
 			splineMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
 	}
-
-	
-
 }
 
 // Called when the game starts or when spawned
