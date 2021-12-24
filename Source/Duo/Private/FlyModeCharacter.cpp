@@ -9,7 +9,9 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/UserWidget.h"
+#include "PanoramicExporter/PanoramicExporter.h"
 
+DECLARE_LOG_CATEGORY_CLASS(FlyModeCharacter, Warning, All);
 
 // Save last actor location.
 static FVector s_lastActorLocation = FVector(.0f, .0f, .0f);
@@ -150,6 +152,8 @@ void AFlyModeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("MouseWheelUp", IE_Released, this, &AFlyModeCharacter::OnMouseWheelUpReleased);
 	PlayerInputComponent->BindAction("MouseWheelDown", IE_Pressed, this, &AFlyModeCharacter::OnMouseWheelDownPressed);
 	PlayerInputComponent->BindAction("MouseWheelDown", IE_Released, this, &AFlyModeCharacter::OnMouseWheelDownReleased);
+
+	PlayerInputComponent->BindAction("Capture", IE_Pressed, this, &AFlyModeCharacter::OnCaptureButtonPressed);
 }
 
 void AFlyModeCharacter::MoveForward(float axisValue)
@@ -338,6 +342,24 @@ void AFlyModeCharacter::OnMouseWheelDownPressed()
 void AFlyModeCharacter::OnMouseWheelDownReleased()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Mouse Wheel Down Released!"));
+}
+
+void AFlyModeCharacter::OnCaptureButtonPressed()
+{
+	APanoramicExporter* exporter = GetPanoramicExporter();
+	exporter->Export();
+	UE_LOG(FlyModeCharacter, Warning, TEXT("Capture button pressed."));
+}
+
+APanoramicExporter* AFlyModeCharacter::GetPanoramicExporter()
+{
+	if (!m_panoramicExporter)
+	{
+		m_panoramicExporter = GetWorld()->SpawnActor<APanoramicExporter>(APanoramicExporter::StaticClass());
+		UE_LOG(LogTemp, Warning, TEXT("PanoramicExporterActor spawned."));
+	}
+	m_panoramicExporter->SetActorLocationAndRotation(m_cameraComp->GetComponentLocation(), m_cameraComp->GetComponentRotation());
+	return m_panoramicExporter;
 }
 
 void AFlyModeCharacter::SetPOV()

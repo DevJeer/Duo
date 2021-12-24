@@ -6,6 +6,9 @@
 #include "GameFramework/Character.h"
 #include "FlyModeCharacter.generated.h"
 
+
+class APanoramicExporter;
+
 UCLASS()
 class AFlyModeCharacter : public ACharacter
 {
@@ -53,6 +56,10 @@ public:
 	void OnMouseWheelUpReleased();
 	void OnMouseWheelDownPressed();
 	void OnMouseWheelDownReleased();
+
+	void OnCaptureButtonPressed();
+
+	APanoramicExporter* GetPanoramicExporter();
 
 private:
 	void SetPOV();
@@ -117,4 +124,8 @@ public:
 	float scrollWheelInputValue;
 	UPROPERTY(EditAnywhere)
 	float m_zoomSpeed = 10.f;
+
+
+private:
+	APanoramicExporter* m_panoramicExporter;
 };

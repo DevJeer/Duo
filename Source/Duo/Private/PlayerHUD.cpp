@@ -22,4 +22,12 @@ void APlayerHUD::DrawHUD()
 		//AddFloat(TEXT("ScrollWheel"), flyModeCharacter->scrollWheelInputValue);
 		//AddVector(TEXT("Anchor point dir"), flyModeCharacter->zoomAnchorDir);
 	}
+
+	AddText(TEXT("PathTest"), FText::FromString(FString(TEXT(""))));
+	AddText(TEXT("rootDir"), FText::FromString(FPaths::RootDir()));
+	AddText(TEXT("projDir"), FText::FromString(FPaths::ProjectDir()));
+	AddText(TEXT("configDir"), FText::FromString(FPaths::ProjectConfigDir()));
+	AddText(TEXT("projSavedDir"), FText::FromString(FPaths::ProjectSavedDir()));
+	
+
 }
