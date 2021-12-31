@@ -12,6 +12,9 @@
 
 DECLARE_LOG_CATEGORY_CLASS(PanormicExporter, Warning, All);
 
+FString APanoramicExporter::s_jpgFileName = "";
+FDelegateHandle APanoramicExporter::s_delegateHandle;
+
 // Sets default values
 APanoramicExporter::APanoramicExporter()
 	: m_exportFormat(EPanormaicExportFormat::Jpeg)
@@ -33,6 +36,8 @@ APanoramicExporter::APanoramicExporter()
 
 	m_cubeCapture = CreateDefaultSubobject<USceneCaptureComponentCube>(TEXT("CubeCapture"));
 	m_cubeCapture->bCaptureEveryFrame = false;
+	m_cubeCapture->bAlwaysPersistRenderingState = true;
+	m_cubeCapture->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
 	m_cubeCapture->SetupAttachment(RootComponent);
 	m_cubeCapture->TextureTarget = m_renderTargetCube;
 }
@@ -49,13 +54,14 @@ void APanoramicExporter::BeginPlay()
 		m_renderTargetCube->SizeX = m_captureHeight;
 		m_renderTargetCube->bHDR = (m_exportFormat == EPanormaicExportFormat::Hdr);
 		m_renderTargetCube->bNeedsTwoCopies = true;
-		m_renderTargetCube->InitAutoFormat(m_captureHeight);
+		//m_renderTargetCube->InitAutoFormat(m_captureHeight);
+		m_renderTargetCube->Init(m_captureHeight, PF_B8G8R8A8);
 		m_renderTargetCube->UpdateResource();
 		m_cubeCapture->TextureTarget = m_renderTargetCube;
 	}
 
-	/*m_cubeCapture->CaptureScene();
-	FlushRenderingCommands();*/
+	m_cubeCapture->CaptureScene();
+	FlushRenderingCommands();
 }
 
 void APanoramicExporter::EndPlay(EEndPlayReason::Type endPlayReason)
@@ -128,6 +134,18 @@ void APanoramicExporter::Export()
 		}
 	}
 
+	/*FTextureRenderTargetResource* rtResource = m_cubeCapture->TextureTarget->GameThread_GetRenderTargetResource();
+	FReadSurfaceDataFlags readPixelFlags(RCM_UNorm);
+	TArray<FColor> outBMP;
+	for (FColor& color : outBMP)
+	{
+		color.A = 255;
+	}
+	outBMP.AddUninitialized(width * height);
+	rtResource->ReadPixels(outBMP, readPixelFlags);
+	FIntPoint destSize(width, height);*/
+
+
 	{
 		SCOPE_CYCLE_COUNTER(STAT_ExportPanoramicFrame);
 		TSharedPtr<IImageWrapper> imageWrapper;
@@ -160,5 +178,28 @@ void APanoramicExporter::Export()
 			break;
 		}
 	}
+}
+
+void APanoramicExporter::SaveScreenShot(const FString& imagePath, int32 width, int32 height)
+{
+	if (!UGameViewportClient::OnScreenshotCaptured().IsBound())
+	{
+		s_jpgFileName = imagePath;
+		GetHighResScreenshotConfig().SetResolution(width, height);
+		s_delegateHandle = UGameViewportClient::OnScreenshotCaptured().AddStatic(&OnScreenshotCaptureInternal);
+		FScreenshotRequest::RequestScreenshot(imagePath, false, false);
+	}
+}
+
+void APanoramicExporter::OnScreenshotCaptureInternal(int32 width, int32 height, const TArray<FColor>& bitmap)
+{
+	IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
+	TSharedPtr<IImageWrapper> ImageWrapper;
+	ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
+	ImageWrapper->SetRaw(bitmap.GetData(), bitmap.GetAllocatedSize(), width, height, ERGBFormat::BGRA, 8);
+	const TArray64<uint8>& jpegData = ImageWrapper->GetCompressed();
+	FFileHelper::SaveArrayToFile(jpegData, *s_jpgFileName);
+	UGameViewportClient::OnScreenshotCaptured().Remove(s_delegateHandle);
+	ImageWrapper.Reset();
 }
 

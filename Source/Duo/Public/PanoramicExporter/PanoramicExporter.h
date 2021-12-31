@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "IImageWrapperModule.h"
 #include "IImageWrapper.h"
+#include "Engine/Public/HighResScreenshot.h"
 #include "PanoramicExporter.generated.h"
 
 DECLARE_STATS_GROUP(TEXT("Panoramic"), STATGROUP_PANORAMIC, STATCAT_Advanced);
@@ -94,6 +95,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "PanoramicExporter")
 	void Export();
 
+	void SaveScreenShot(const FString& imagePath, int32 width, int32 height);
+
+
+	static void OnScreenshotCaptureInternal(int32 width, int32 height, const TArray<FColor>& bitmap);
 private:
 	IImageWrapperModule* m_imageWrapperModule;
+
+	static FString s_jpgFileName;
+	static FDelegateHandle s_delegateHandle;
 };

@@ -154,6 +154,7 @@ void AFlyModeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("MouseWheelDown", IE_Released, this, &AFlyModeCharacter::OnMouseWheelDownReleased);
 
 	PlayerInputComponent->BindAction("Capture", IE_Pressed, this, &AFlyModeCharacter::OnCaptureButtonPressed);
+	PlayerInputComponent->BindAction("RotateByAngle", IE_Pressed, this, &AFlyModeCharacter::RotateByAngle);
 }
 
 void AFlyModeCharacter::MoveForward(float axisValue)
@@ -351,6 +352,11 @@ void AFlyModeCharacter::OnCaptureButtonPressed()
 	UE_LOG(FlyModeCharacter, Warning, TEXT("Capture button pressed."));
 }
 
+void AFlyModeCharacter::RotateByAngle()
+{
+	SetActorRotation(FRotator(0.0f, 0.0f, 90.0f));
+}
+
 APanoramicExporter* AFlyModeCharacter::GetPanoramicExporter()
 {
 	if (!m_panoramicExporter)
@@ -360,6 +366,14 @@ APanoramicExporter* AFlyModeCharacter::GetPanoramicExporter()
 	}
 	m_panoramicExporter->SetActorLocationAndRotation(m_cameraComp->GetComponentLocation(), m_cameraComp->GetComponentRotation());
 	return m_panoramicExporter;
+}
+
+void AFlyModeCharacter::SaveScreenShot(FString fileName)
+{
+	APanoramicExporter* exporter = GetPanoramicExporter();
+
+	FString path = TEXT("C:\\Hjf\\Study\\UE5\\5.0\\Duo\\Output\\") + fileName;
+	exporter->SaveScreenShot(path, m_width, m_height);
 }
 
 void AFlyModeCharacter::SetPOV()

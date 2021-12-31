@@ -58,8 +58,14 @@ public:
 	void OnMouseWheelDownReleased();
 
 	void OnCaptureButtonPressed();
+	void RotateByAngle();
 
+	UFUNCTION(BlueprintCallable, Category = "PanoramicExporter")
 	APanoramicExporter* GetPanoramicExporter();
+
+protected:
+	UFUNCTION(BlueprintCallable, Category = "PanormaicExporter")
+	void SaveScreenShot(FString fileName);
 
 private:
 	void SetPOV();
@@ -89,7 +95,7 @@ private:
 
 protected:
 	// Camera
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UCameraComponent* m_cameraComp = nullptr;
 
 	UPROPERTY(EditAnywhere)
@@ -107,6 +113,12 @@ public:
 	bool m_bIsRotatingView;
 	UPROPERTY(EditAnywhere)
 	float m_sensitivityFactor = 1.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ImageSetting")
+	int32 m_width;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "ImageSetting")
+	int32 m_height;
 
 	// Pan Properties
 	bool m_bIsPanning;
